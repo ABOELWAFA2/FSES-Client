@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat</title>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+  <style type="text/css">
+    body{
+      background-color: #F8F9F9;
+    }
+.sender-message {
+  text-align: right;
+  background-color: #c3e6cb;
+  color: #155724;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size:25px;
+}
+
+.receiver-message {
+  text-align: left;
+  background-color: #F4D03F;
+  color: #212529;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size:25px;
+
+}
+#message-input{
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size:25px;
+}
+#btn1{
+  width: 100%;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size:25px;
+}
+#btn2{
+    width: 100%;
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size:25px;
+}
+
+  </style>
+</head>
+<body>
+  <div id="chat-container" style="display: block;">
+    <div id="messages"></div>
+    <input type="text" id="message-input" placeholder="Type a message">
+    <button onclick="sendMessage()" id="btn1">Send</button>
+    <button onclick="clearChat()" id="btn2">Clear Chat</button>
+
+  </div>
+
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyAIeO2rS7cLi8pngrfHhXH2s9POBqWSvcA",
+  authDomain: "fast-8d133.firebaseapp.com",
+  projectId: "fast-8d133",
+  storageBucket: "fast-8d133.appspot.com",
+  messagingSenderId: "48619615319",
+  appId: "1:48619615319:web:ff891495ba805157145f12"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    var db = firebase.database();
+    var auth = firebase.auth();
+
+    // Check if a user is already signed in
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        showChat();
+      } else {
+        window.location.href="login.html"
+      }
+    });
+
+    function showChat() {
+      document.getElementById("chat-container").style.display = "block";
+      listenForMessages();
+    }
+
+    function sendMessage() {
+      var messageInput = document.getElementById("message-input");
+      var message = messageInput.value;
+      messageInput.value = "";
+
+      var currentUser = auth.currentUser;
+      var messagesRef = db.ref("messages");
+
+      messagesRef.push({
+        text: message,
+        sender: currentUser.uid,
+        timestamp:firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+function listenForMessages() {
+  var messagesRef = db.ref("messages");
+  messagesRef.on("child_added", function(snapshot) {
+    var message = snapshot.val();
+    var currentUser = auth.currentUser;
+
+    var messageElement = document.createElement("div");
+    messageElement.textContent = message.text;
+
+    // Add CSS classes to differentiate sender and receiver messages
+    if (message.sender === currentUser.uid) {
+      messageElement.classList.add("sender-message");
+    } else {
+      messageElement.classList.add("receiver-message");
+    }
+
+    document.getElementById("messages").appendChild(messageElement);
+  });
+}
+    function clearChat() {
+      var messagesRef = db.ref("messages");
+      messagesRef.remove()
+        .then(function() {
+          // Chat history cleared successfully
+          document.getElementById("messages").innerHTML = "";
+        })
+        .catch(function(error) {
+          console.log("Error clearing chat history:", error);
+        });
+    }
+    // ...
+
+
+  </script>
+</body>
+</html>

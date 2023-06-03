@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat App</title>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</head>
+<body>
+  <div id="chat-container" style="display:block;">
+    <div id="messages"></div>
+    <input type="text" id="message-input" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyAIeO2rS7cLi8pngrfHhXH2s9POBqWSvcA",
+  authDomain: "fast-8d133.firebaseapp.com",
+  projectId: "fast-8d133",
+  storageBucket: "fast-8d133.appspot.com",
+  messagingSenderId: "48619615319",
+  appId: "1:48619615319:web:ff891495ba805157145f12"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    var db = firebase.database();
+    var auth = firebase.auth();
+
+    // Check if a user is already signed in
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        showChat();
+      } else {
+        // Redirect or show a login form to sign in
+      }
+    });
+
+    function showChat() {
+      document.getElementById("chat-container").style.display = "block";
+      listenForMessages();
+    }
+
+    function sendMessage() {
+      var messageInput = document.getElementById("message-input");
+      var message = messageInput.value;
+      messageInput.value = "";
+
+      var currentUser = auth.currentUser;
+      var messagesRef = db.ref("messages");
+
+      messagesRef.push({
+        text: message,
+        sender: currentUser.uid,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+    function listenForMessages() {
+      var messagesRef = db.ref("messages");
+      messagesRef.on("child_added", function(snapshot) {
+        var message = snapshot.val();
+        var currentUser = auth.currentUser;
+
+        var messageElement = document.createElement("div");
+        messageElement.textContent = message.text;
+        if (message.sender === currentUser.uid) {
+          messageElement.style.textAlign = "right";
+        }
+
+        document.getElementById("messages").appendChild(messageElement);
+      });
+    }
+  </script>
+</body>
+</html>
